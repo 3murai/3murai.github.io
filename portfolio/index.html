@@ -398,7 +398,7 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
   var wide = all.filter(function (w) { return w.kind !== "s"; }), tall = all.filter(function (w) { return w.kind === "s"; });
   var total = all.reduce(function (s, w) { return s + w.views; }, 0);
   function url(w) { return w.kind === "s" ? "https://youtube.com/shorts/" + w.id : "https://youtu.be/" + w.id; }
-  function img(w) { return (w.kind === "s" ? "vthumbs/" : "../thumbs/") + w.id + ".jpg"; }
+  function img(w) { return "https://i.ytimg.com/vi/" + w.id + (w.kind === "s" ? "/oardefault.jpg" : "/hqdefault.jpg"); }
   function age(w) {
     if (w.src === "client") return (Date.now() - Date.parse(w.when)) / 864e5;
     var m = /(\d+)\s*(時間|日|週間|か月|年)前/.exec(w.when || ""); if (!m) return 9999;
