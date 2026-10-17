@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>さ村井 Portfolio</title>
+<meta name="description" content="切り抜き動画編集者 さ村井のポートフォリオ。横動画とショート、全309本。料金と見積もりも。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Old+Mincho:wght@900&family=Yuji+Syuku&family=Shippori+Antique+B1&family=Reggae+One&family=Zen+Kaku+Gothic+New:wght@900&family=Noto+Sans+JP:wght@400;500;700;900&family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* さ村井 — portfolio.
+   Paper white, ink black, one vermilion for the cut. Horizontal works are 16:9 frames, shorts are
+   9:16 phones. Opening: an edit timeline plays the name (tracks, clips, playhead), then collapses and lifts.
+   Everything else rises out of masks as it enters. Single look by design. */
+:root {
+  --bg: #f2f0eb; --paper: #fbfaf7; --ink: #111110; --muted: #6d6a63; --line: #d8d4cb; --cut: #ff3d17;
+  --sans: "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  --en: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --disp: "Dela Gothic One", "Noto Sans JP", sans-serif;
+  --disp-w: 400;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  color-scheme: light;
+}
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.8; -webkit-font-smoothing: antialiased; font-feature-settings: "palt"; word-break: auto-phrase; line-break: strict; }
+h1, h2, h3, .hero-sub p, .head p, .t, .tt, .pnotes li, .clients b { text-wrap: balance; }
+*, *::before, *::after { box-sizing: border-box; }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 48px); }
+.mask { display: block; overflow: hidden; }
+.mask > span { display: block; transform: translateY(105%); transition: transform 1.2s var(--ease); }
+.is-in .mask > span, .mask.is-in > span { transform: none; }
+.fade { opacity: 0; transform: translateY(18px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+.is-in .fade, .fade.is-in { opacity: 1; transform: none; }
+
+/* ---------- opening: an edit timeline plays the name ----------
+   Tracks draw in, clips snap onto them, the playhead runs across and each clip it passes
+   "plays" one character of the name. Then the picture collapses to a line and lifts away. */
+.op { position: fixed; inset: 0; z-index: 100; background: var(--ink); color: var(--bg); clip-path: inset(0 0 0 0); }
+.op .stagebox { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: clamp(26px, 5vh, 48px); transform-origin: 50% 50%; }
+.op .name { display: flex; gap: .08em; font-family: var(--disp); font-weight: var(--disp-w); font-size: clamp(56px, 11vw, 160px); line-height: 1; }
+.op .name span { display: inline-block; opacity: 0; transform: translateY(30%) scale(1.08); filter: blur(8px); }
+.op .tl { position: relative; width: min(880px, 86vw); display: grid; gap: 7px; padding: 14px 0; }
+.op .track { position: relative; height: 14px; border-top: 1px solid #2b2a28; transform: scaleX(0); transform-origin: left; }
+.op .clip { position: absolute; top: 2px; height: 10px; border-radius: 2px; opacity: 0; transform: translateX(60vw); }
+.op .clip.w { background: #e9e6df; } .op .clip.g { background: #5f5c56; } .op .clip.r { background: var(--cut); }
+.op .ph { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; margin-left: -1px; background: var(--cut); opacity: 0; }
+.op .ph::before { content: ""; position: absolute; left: -5px; top: -8px; border: 6px solid transparent; border-top-color: var(--cut); }
+.op .meta { display: flex; justify-content: space-between; width: min(880px, 86vw); font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: #8d8a83; opacity: 0; font-variant-numeric: tabular-nums; }
+.op .sub2 { font-family: var(--en); font-weight: 700; font-stretch: 75%; font-size: 13px; letter-spacing: .6em; opacity: 0; }
+
+.op.run .track { animation: grow .7s cubic-bezier(.76, 0, .24, 1) forwards; }
+.op.run .track:nth-child(2) { animation-delay: .1s; } .op.run .track:nth-child(3) { animation-delay: .2s; }
+.op.run .meta { animation: fadeIn .5s .3s forwards; }
+.op.run .clip { animation: snap .55s cubic-bezier(.16, 1, .3, 1) forwards; animation-delay: calc(.7s + var(--d) * 70ms); }
+.op.run .ph { animation: fadeIn .2s 1.65s forwards, play 2s 1.7s cubic-bezier(.45, 0, .55, 1) forwards; }
+.op.run .name span { animation: focus .7s cubic-bezier(.16, 1, .3, 1) forwards; }
+.op.run .name span:nth-child(1) { animation-delay: 2.05s; } .op.run .name span:nth-child(2) { animation-delay: 2.65s; } .op.run .name span:nth-child(3) { animation-delay: 3.25s; }
+.op.run .sub2 { animation: track 1s 3.55s cubic-bezier(.16, 1, .3, 1) forwards; }
+.op.out .stagebox { animation: crt .45s cubic-bezier(.76, 0, .24, 1) forwards; }
+.op.out { animation: lift .8s .4s cubic-bezier(.76, 0, .24, 1) forwards; }
+@keyframes grow { to { transform: scaleX(1); } }
+@keyframes snap { to { opacity: 1; transform: none; } }
+@keyframes play { to { left: 100%; } }
+@keyframes focus { to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes track { from { opacity: 0; letter-spacing: 1.4em; } to { opacity: .8; letter-spacing: .6em; } }
+@keyframes crt { 60% { transform: scaleY(.006) scaleX(1); opacity: 1; } 100% { transform: scaleY(.006) scaleX(0); opacity: 0; } }
+@keyframes lift { to { clip-path: inset(0 0 100% 0); } }
+.op.gone { display: none; }
+/* ---------- nav ---------- */
+.nav { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 50; mix-blend-mode: difference; color: #fff; }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.nav a { text-decoration: none; }
+.nav .name { font-family: var(--disp); font-weight: var(--disp-w); font-size: 18px; letter-spacing: .06em; }
+.nav ul { display: flex; gap: 26px; margin: 0; padding: 0; list-style: none; font-family: var(--en); font-weight: 500; font-size: 12px; letter-spacing: .16em; }
+.nav ul a { position: relative; }
+.nav ul a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .5s var(--ease); }
+.nav ul a:hover::after { transform: scaleX(1); transform-origin: left; }
+
+/* ---------- hero ---------- */
+.hero { min-height: 100vh; min-height: 100svh; display: grid; grid-template-rows: auto 1fr auto; padding-block: 96px 40px; }
+.hero-top { display: flex; justify-content: space-between; gap: 16px; font-family: var(--en); font-weight: 500; font-size: 12px; letter-spacing: .18em; color: var(--muted); }
+.dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--cut); vertical-align: 1px; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.hero h1 { align-self: end; margin: 0; font-family: var(--disp); font-weight: var(--disp-w); font-size: clamp(72px, 17vw, 260px); line-height: 1; letter-spacing: -.02em; }
+.hero h1 .ch { display: inline-block; transform: translateY(110%); transition: transform 1.3s var(--ease); }
+.hero h1 .ch:nth-child(2) { transition-delay: .08s; } .hero h1 .ch:nth-child(3) { transition-delay: .16s; }
+.hero.is-in h1 .ch { transform: none; }
+.hero h1 .cl { position: relative; display: inline-block; overflow: hidden; padding-bottom: .02em; }
+.hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr)); gap: 24px; align-items: end; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--ink); }
+.hero-sub p { margin: 0; font-size: clamp(15px, 1.4vw, 18px); font-weight: 700; line-height: 1.6; }
+.stat b { display: block; font-family: var(--en); font-weight: 900; font-stretch: 112%; font-size: clamp(22px, 6.4vw, 56px); line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat span { font-size: 12px; color: var(--muted); letter-spacing: .08em; }
+
+/* ---------- marquee ---------- */
+.marquee { overflow: hidden; background: var(--ink); color: var(--bg); padding-block: 18px; }
+.marquee .track { display: flex; width: max-content; will-change: transform; }
+.marquee span { padding-inline: 28px; font-family: var(--disp); font-weight: var(--disp-w); font-size: clamp(26px, 4vw, 52px); white-space: nowrap; }
+.marquee span::after { content: "✂"; margin-left: 56px; color: var(--cut); font-size: .6em; vertical-align: .2em; }
+
+/* ---------- sections ---------- */
+.sec { padding-block: clamp(80px, 12vw, 160px) 0; scroll-margin-top: 64px; }
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: clamp(28px, 4vw, 48px); }
+.head .k { font-family: var(--en); font-weight: 700; font-stretch: 75%; font-size: 12px; letter-spacing: .24em; color: var(--muted); }
+.head h2 { margin: 6px 0 0; font-family: var(--disp); font-weight: var(--disp-w); font-size: clamp(30px, 8.4vw, 96px); line-height: 1.1; letter-spacing: -.01em; }
+.head p { margin: 0; max-width: 30em; color: var(--muted); }
+
+/* highlight: the most-watched video and the most-watched short, side by side */
+.hl { display: grid; grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr); gap: clamp(16px, 2vw, 28px); align-items: stretch; }
+.hl a { position: relative; display: block; overflow: hidden; text-decoration: none; color: #fff; background: #ddd8ce; clip-path: inset(10% 0 10% 0); transition: clip-path 1.3s var(--ease); }
+.hl.is-in a { clip-path: inset(0 0 0 0); }
+.hl .v { aspect-ratio: 16 / 9; }
+.hl .s { aspect-ratio: auto; }
+.hl img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+.hl a:hover img { transform: scale(1.04); }
+.hl .ov { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 18px 16px; background: linear-gradient(transparent, rgba(0, 0, 0, .78)); }
+.hl .lb { font-family: var(--en); font-weight: 600; font-size: 11px; letter-spacing: .2em; color: var(--cut); }
+.hl .tt { margin: 4px 0 0; font-weight: 900; font-size: clamp(15px, 1.6vw, 22px); line-height: 1.5; }
+.hl .s .tt { font-size: 15px; }
+.hl .vv { font-family: var(--en); font-size: 13px; opacity: .85; }
+
+/* works */
+.bar { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding-block: 12px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.tabs { display: inline-flex; gap: 0; border: 1px solid var(--ink); border-radius: 999px; padding: 3px; }
+.tab { padding: 8px 18px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font: 700 14px/1 var(--sans); cursor: pointer; transition: background-color .3s, color .3s; }
+.tab .n { margin-left: 6px; font-family: var(--en); font-weight: 500; font-size: 12px; opacity: .65; }
+.tab[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.tog { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.tog input { accent-color: var(--cut); width: 16px; height: 16px; }
+.bar .sp { flex: 1; }
+.bar select, .bar input[type="search"] { height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); color: var(--ink); font: 400 13px/1 var(--sans); }
+.bar input[type="search"] { width: min(240px, 100%); }
+.count { margin: 18px 0 0; font-family: var(--en); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.g-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 40px 22px; margin-top: 20px; }
+.g-tall { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr)); gap: 26px 16px; margin-top: 20px; }
+.g-mix { column-width: 230px; column-gap: 18px; margin-top: 20px; }
+.g-mix > a { break-inside: avoid; margin-bottom: 26px; }
+
+.c { display: block; min-width: 0; text-decoration: none; opacity: 0; transform: translateY(26px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+.c.is-in { opacity: 1; transform: none; }
+.c .ph { position: relative; overflow: hidden; background: #ddd8ce; }
+.c.v .ph { aspect-ratio: 16 / 9; }
+.c.s .ph { aspect-ratio: 9 / 16; border-radius: 10px; }
+.c img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease); }
+.c:hover img { transform: scale(1.06); }
+.c .go { position: absolute; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--cut); color: #fff; font-family: var(--en); font-weight: 600; font-size: 11px; letter-spacing: .1em; transform: translateY(140%); transition: transform .5s var(--ease); }
+.c:hover .go, .c:focus-visible .go { transform: none; }
+.c .tag { position: absolute; left: 8px; top: 8px; padding: 2px 8px; background: var(--cut); color: #fff; font-size: 11px; font-weight: 700; }
+.c .meta { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font-family: var(--en); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.c .meta b { color: var(--ink); font-weight: 600; }
+.c .t { margin: 3px 0 0; font-size: 14px; font-weight: 700; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* shorts read like a phone: text over the picture */
+.c.s .ov { position: absolute; left: 0; right: 0; bottom: 0; padding: 48px 10px 10px; background: linear-gradient(transparent, rgba(0, 0, 0, .8)); color: #fff; }
+.c.s .ov .t { margin: 0; font-size: 12.5px; -webkit-line-clamp: 3; }
+.c.s .ov .vv { display: block; margin-top: 4px; font-family: var(--en); font-weight: 600; font-size: 11px; }
+.c.s .go { right: 8px; bottom: auto; top: 8px; transform: translateY(-160%); }
+.more { display: flex; justify-content: center; margin-top: 44px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 15px 28px; border: 1px solid var(--ink); border-radius: 999px; background: var(--ink); color: var(--bg); font: 700 14px/1 var(--sans); text-decoration: none; cursor: pointer; transition: background-color .3s, color .3s, border-color .3s; }
+.btn:hover { background: var(--cut); border-color: var(--cut); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.ghost:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* price */
+.price { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
+.ptable { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ptable th, .ptable td { padding: 14px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: baseline; }
+.ptable thead th { font-family: var(--en); font-weight: 600; font-size: 11px; letter-spacing: .16em; color: var(--muted); border-bottom-color: var(--ink); }
+.ptable tbody th { font-weight: 700; font-size: 15px; }
+.ptable tbody th small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.ptable td { font-family: var(--en); font-weight: 800; font-size: 20px; }
+.ptable td.f { color: var(--cut); font-size: 16px; }
+.ptable td.ask { font-family: var(--sans); font-size: 14px; font-weight: 700; color: var(--muted); }
+.pnotes { margin: 22px 0 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--muted); }
+.pnotes li { padding: 6px 0 6px 18px; position: relative; }
+.pnotes li::before { content: ""; position: absolute; left: 0; top: 16px; width: 8px; height: 2px; background: var(--cut); }
+.est { padding: clamp(20px, 3vw, 32px); background: var(--paper); border: 1px solid var(--line); }
+.est h3 { margin: 0 0 14px; font-size: 18px; }
+.field { display: grid; gap: 6px; margin: 0 0 14px; }
+.field > span, .field legend { font-size: 12px; font-weight: 700; color: var(--muted); }
+fieldset.field { border: 0; padding: 0; min-width: 0; }
+.choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.choices label { position: relative; }
+.choices input { position: absolute; opacity: 0; }
+.choices span { display: inline-block; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; transition: background-color .2s, color .2s, border-color .2s; }
+.choices input:checked + span { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.choices input:disabled + span { opacity: .4; cursor: not-allowed; }
+.choices input:focus-visible + span { outline: 2px solid var(--cut); outline-offset: 2px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.input, .textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--sans); }
+.textarea { resize: vertical; min-height: 80px; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 14px; font-size: 14px; }
+.checks label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.checks input { accent-color: var(--cut); width: 16px; height: 16px; }
+.res { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--ink); }
+.est-total { margin: 0; font-family: var(--en); font-weight: 800; font-size: clamp(36px, 5vw, 56px); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.est-per { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.est-lines { list-style: none; margin: 12px 0 16px; padding: 0; }
+.est-lines li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; font-variant-numeric: tabular-nums; }
+.est-lines li span:first-child { color: var(--muted); }
+.est-msg { width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: 400 13px/1.7 var(--sans); resize: vertical; }
+.est-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.est-actions .btn { padding: 12px 20px; font-size: 13px; }
+.copied { font-size: 13px; font-weight: 700; color: var(--cut); }
+.est-note, .mailline { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.mailline code { font-family: inherit; color: var(--ink); font-weight: 700; user-select: all; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* clients */
+.clients { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); }
+.clients li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); transition: padding .5s var(--ease), color .3s; }
+.clients li:hover { padding-left: 14px; color: var(--cut); }
+.clients b { font-family: var(--disp); font-weight: var(--disp-w); font-size: clamp(24px, 3.4vw, 44px); letter-spacing: .02em; }
+.clients span { font-family: var(--en); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* contact */
+.contact { margin-top: clamp(80px, 12vw, 160px); padding-block: clamp(80px, 12vw, 150px); background: var(--ink); color: var(--bg); }
+.contact h2 { margin: 0; font-family: var(--disp); font-weight: var(--disp-w); font-size: clamp(30px, 8.4vw, 140px); line-height: 1.1; letter-spacing: -.01em; }
+.contact h2 em { font-style: normal; color: var(--cut); }
+.contact h2 .mask > span, .head h2.mask > span { white-space: nowrap; }
+.contact .row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 40px; }
+.mail { font-family: var(--en); font-weight: 500; font-size: clamp(18px, 2.4vw, 28px); user-select: all; }
+.contact .btn { background: var(--bg); color: var(--ink); border-color: var(--bg); }
+.contact .btn:hover { background: var(--cut); color: #fff; border-color: var(--cut); }
+.contact .btn.ghost { background: transparent; color: var(--bg); }
+.foot { padding-block: 22px 32px; background: var(--ink); color: #8d8a83; font-family: var(--en); font-size: 12px; }
+.foot .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid #2c2b29; padding-top: 18px; }
+
+@media (max-width: 900px) {
+  .nav ul { display: none; }
+  .hero-sub { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero-sub p { grid-column: 1 / -1; }
+  .price { grid-template-columns: minmax(0, 1fr); }
+  .bar .sp { display: none; }
+}
+@media (max-width: 640px) {
+  .hl { grid-template-columns: minmax(0, 1fr); }
+  .hl .s { aspect-ratio: 9 / 16; max-width: 260px; }
+  .g-tall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .row2 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mask > span, .fade, .c, .hl a, .hero h1 .ch { transition: none; transform: none; opacity: 1; clip-path: none; }
+  .op { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="op" id="op" aria-hidden="true"><div class="stagebox"><div class="name"><span>さ</span><span>村</span><span>井</span></div><div><div class="tl" id="optl"><div class="track"></div><div class="track"></div><div class="track"></div><span class="ph"></span></div><div class="meta"><span id="optc">00:00:00:00</span><span>SEQ_01 — さ村井</span></div></div><p class="sub2">CLIP EDITOR — TOKYO</p></div></div>
+
+<header class="nav"><div class="wrap"><a class="name" href="#top">さ村井</a><ul><li><a href="#works">WORKS</a></li><li><a href="#price">PRICE</a></li><li><a href="#clients">CLIENTS</a></li><li><a href="#contact">CONTACT</a></li></ul></div></header>
+
+<main id="top">
+  <section class="wrap hero" id="hero">
+    <div class="hero-top"><span>CLIP EDITOR — TOKYO</span><span><i class="dot"></i>依頼受付中</span></div>
+    <h1 aria-label="さ村井"><span class="cl"><span class="ch">さ</span><span class="ch">村</span><span class="ch">井</span></span></h1>
+    <div class="hero-sub">
+      <p class="fade">切り抜き動画編集者。<br>配信のいちばんの瞬間を、短く、強く。</p>
+      <div class="stat fade" style="transition-delay:.1s"><b data-count="wide">0</b><span>本の横動画</span></div>
+      <div class="stat fade" style="transition-delay:.2s"><b data-count="tall">0</b><span>本のショート</span></div>
+      <div class="stat fade" style="transition-delay:.3s"><b data-count="views">0</b><span>合計再生回数</span></div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq"></div></div>
+
+  <section class="wrap sec" id="works" aria-labelledby="works-h">
+    <div class="head"><div><span class="k">01 — WORKS</span><h2 class="mask" id="works-h"><span>つくった動画</span></h2></div><p class="fade">押すと YouTube で再生します。横動画とショートを切り替えて見られます。</p></div>
+    <div class="hl" id="hl"></div>
+
+    <div class="bar" style="margin-top:clamp(48px,6vw,80px)">
+      <div class="tabs" role="group" aria-label="種類">
+        <button class="tab" data-k="v" aria-pressed="true">横動画<span class="n"></span></button>
+        <button class="tab" data-k="s" aria-pressed="false">ショート<span class="n"></span></button>
+        <button class="tab" data-k="all" aria-pressed="false">すべて<span class="n"></span></button>
+      </div>
+      <label class="tog"><input type="checkbox" id="onlyClient"> 依頼作品だけ</label>
+      <span class="sp"></span>
+      <select id="sort" aria-label="並べ替え"><option value="views">再生回数が多い順</option><option value="new">新しい順</option></select>
+      <input id="q" type="search" placeholder="タイトル・ライバー名" aria-label="作品を検索">
+    </div>
+    <p class="count" id="count"></p>
+    <div id="grid"></div>
+    <div class="more"><button class="btn ghost" id="moreBtn" type="button">もっと見る</button></div>
+  </section>
+
+  <section class="wrap sec" id="price" aria-labelledby="price-h">
+    <div class="head"><div><span class="k">02 — PRICE</span><h2 class="mask" id="price-h"><span>料金・見積もり</span></h2></div><p class="fade">表示はすべて税込です。右のシミュレーターで、金額の目安と依頼文がすぐにできます。</p></div>
+    <div class="price">
+      <div class="fade">
+        <table class="ptable">
+          <thead><tr><th>メニュー</th><th>通常</th><th>初回</th><th>長期</th></tr></thead>
+          <tbody>
+            <tr><th>ショート動画</th><td>3,000円</td><td class="f">2,000円</td><td class="f">2,000円</td></tr>
+            <tr><th>横動画<small>0:01〜7:59</small></th><td>8,000円</td><td class="f">6,000円</td><td class="f">6,000円</td></tr>
+            <tr><th>横動画<small>8:00〜14:59</small></th><td>15,000円</td><td class="f">10,000円</td><td class="f">12,000円</td></tr>
+            <tr><th>横動画<small>15:00以上</small></th><td colspan="3" class="ask">要相談</td></tr>
+            <tr><th>企画動画</th><td colspan="3" class="ask">要相談</td></tr>
+            <tr><th>サムネイル</th><td>1,000円</td><td class="f">0円</td><td class="f">500円</td></tr>
+          </tbody>
+        </table>
+        <ul class="pnotes">
+          <li>シーン選びもおまかせ ＋1,000円（アーカイブ2時間以上 さらに＋1,000円／5時間以上 さらに＋2,000円）</li>
+          <li>出演2人以上は 1人ごとに ＋1,000円（長期は ＋500円）</li>
+          <li>修正は3回まで無料。納期の目安はショート・サムネイル 即日〜2日、横動画 2日〜1週間</li>
+          <li>長期：3か月以上継続 かつ 月にショート15本以上 または 横動画10本以上</li>
+          <li>お支払いは銀行振込など（PayPay・PayPal は不可）</li>
+        </ul>
+      </div>
+
+      <div class="est fade" id="estimate">
+        <form id="estimate-form">
+          <h3>見積もりシミュレーター</h3>
+          <fieldset class="field"><legend>動画の種類</legend><div class="choices">
+            <label><input type="radio" name="plan" value="short" checked><span>ショート</span></label>
+            <label><input type="radio" name="plan" value="long1"><span>横動画 〜7:59</span></label>
+            <label><input type="radio" name="plan" value="long2"><span>横動画 8:00〜14:59</span></label>
+            <label><input type="radio" name="plan" value="long3"><span>横動画 15:00〜</span></label>
+            <label><input type="radio" name="plan" value="plan"><span>企画動画</span></label>
+          </div></fieldset>
+          <fieldset class="field"><legend>料金プラン</legend><div class="choices">
+            <label><input type="radio" name="mode" value="first" checked><span>はじめて</span></label>
+            <label><input type="radio" name="mode" value="normal"><span>通常</span></label>
+            <label><input type="radio" name="mode" value="long"><span>長期</span></label>
+          </div></fieldset>
+          <div class="row2">
+            <label class="field"><span>本数</span><input class="input" name="qty" type="number" min="1" max="60" value="1" inputmode="numeric"></label>
+            <label class="field"><span>出演人数（1本あたり）</span><input class="input" name="cast" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
+          </div>
+          <div class="checks"><label><input type="checkbox" name="clip"> シーン選びもおまかせ</label><label><input type="checkbox" name="thumb"> サムネイルも依頼</label></div>
+          <fieldset class="field"><legend>アーカイブの長さ（おまかせの場合）</legend><div class="choices">
+            <label><input type="radio" name="arc" value="0" checked disabled><span>2時間未満</span></label>
+            <label><input type="radio" name="arc" value="1" disabled><span>2時間以上</span></label>
+            <label><input type="radio" name="arc" value="2" disabled><span>5時間以上</span></label>
+          </div></fieldset>
+          <div class="row2">
+            <label class="field"><span>お名前・活動名</span><input class="input" name="name" type="text" autocomplete="nickname"></label>
+            <label class="field"><span>希望納期</span><input class="input" name="deadline" type="text" placeholder="例：11月末まで"></label>
+          </div>
+          <label class="field"><span>チャンネル URL</span><input class="input" name="channel" type="url" placeholder="https://www.youtube.com/@..."></label>
+          <label class="field"><span>内容・要望</span><textarea class="textarea" name="note" placeholder="切り抜きたい配信、雰囲気、参考動画など"></textarea></label>
+        </form>
+        <div class="res" aria-live="polite">
+          <p class="est-total" id="est-total">¥2,000</p>
+          <p class="est-per" id="est-per"></p>
+          <ul class="est-lines" id="est-lines"></ul>
+          <label class="visually-hidden" for="est-message">依頼文</label>
+          <textarea class="est-msg" id="est-message"></textarea>
+          <div class="est-actions">
+            <a class="btn" id="est-mail" href="mailto:uta40344@gmail.com">メールで送る</a>
+            <button class="btn ghost" type="button" id="est-copy">依頼文をコピー</button>
+            <a class="btn ghost" id="est-foriio" href="https://www.foriio.com/3murai" target="_blank" rel="noopener">foriio から相談</a>
+            <span class="copied" id="est-copied" hidden>コピーしました</span>
+          </div>
+          <p class="mailline">メールが開かない場合は、依頼文をコピーして <code>uta40344@gmail.com</code> へ。</p>
+          <p class="est-note">金額は料金表にもとづく目安です。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap sec" id="clients" aria-labelledby="cl-h">
+    <div class="head"><div><span class="k">03 — CLIENTS</span><h2 class="mask" id="cl-h"><span>ご依頼いただいた方</span></h2></div></div>
+    <ul class="clients" id="clientList"></ul>
+  </section>
+
+  <section class="contact" id="contact" aria-labelledby="ct-h">
+    <div class="wrap">
+      <h2 id="ct-h"><span class="mask"><span>あなたの配信の、</span></span><span class="mask"><span><em>いちばん</em>を切り抜く。</span></span></h2>
+      <div class="row fade">
+        <span class="mail">uta40344@gmail.com</span>
+        <button class="btn" id="copyMail" type="button">アドレスをコピー</button>
+        <a class="btn ghost" href="#price">料金・見積もり</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="foot"><div class="wrap"><span>© 2026 さ村井</span><a href="../" style="text-decoration:none">Charascène ↗</a></div></footer>
+
+<script src="works-data.js"></script>
+<script src="estimate.js"></script>
+<script>
+(function () {
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function fmt(n) { return n >= 10000 ? (Math.round(n / 1000) / 10) + "万" : n.toLocaleString("ja-JP"); }
+
+  // ---------- data ----------
+  var own = (window.WORKS_OWN || []).map(function (r) { return { id: r[0], views: r[1], when: r[2], dur: r[3], kind: r[4], title: r[5], who: "", src: "own" }; });
+  var client = (window.WORKS_CLIENT || []).map(function (r) { return { id: r[0], views: r[1], when: r[2], dur: r[3], kind: r[4], title: r[5], who: r[6] || "", src: "client" }; });
+  var all = client.concat(own);
+  var wide = all.filter(function (w) { return w.kind !== "s"; }), tall = all.filter(function (w) { return w.kind === "s"; });
+  var total = all.reduce(function (s, w) { return s + w.views; }, 0);
+  function url(w) { return w.kind === "s" ? "https://youtube.com/shorts/" + w.id : "https://youtu.be/" + w.id; }
+  function img(w) { return (w.kind === "s" ? "vthumbs/" : "../thumbs/") + w.id + ".jpg"; }
+  function age(w) {
+    if (w.src === "client") return (Date.now() - Date.parse(w.when)) / 864e5;
+    var m = /(\d+)\s*(時間|日|週間|か月|年)前/.exec(w.when || ""); if (!m) return 9999;
+    return +m[1] * { "時間": 1 / 24, "日": 1, "週間": 7, "か月": 30, "年": 365 }[m[2]];
+  }
+  function when(w) { return w.src === "client" ? w.when.replace(/-/g, "/") : w.when; }
+
+  // ---------- opening: an edit timeline plays the name, then collapses and lifts ----------
+  var op = $("op"), opTimers = [];
+  (function build() {
+    // [track, left%, width%, colour]
+    var CLIPS = [[0, 2, 26, "w"], [0, 30, 18, "g"], [0, 50, 30, "w"], [0, 82, 16, "g"],
+                 [1, 8, 14, "r"], [1, 40, 12, "r"], [1, 72, 14, "r"],
+                 [2, 0, 100, "g"]];
+    var tracks = op.querySelectorAll(".track");
+    CLIPS.forEach(function (c, i) {
+      var el = document.createElement("i");
+      el.className = "clip " + c[3];
+      el.style.left = c[1] + "%"; el.style.width = c[2] + "%"; el.style.setProperty("--d", i);
+      tracks[c[0]].appendChild(el);
+    });
+  })();
+  function revealHero() { $("hero").classList.add("is-in"); countUp(); }
+  function playOpening() {
+    opTimers.forEach(clearTimeout); opTimers = [];
+    $("hero").classList.remove("is-in");
+    op.className = "op"; void op.offsetWidth; op.className = "op run";
+    var t0 = Date.now(), tcEl = $("optc");
+    var iv = setInterval(function () { var f = Math.floor((Date.now() - t0) / 1000 * 24); tcEl.textContent = "00:00:0" + Math.floor(f / 24) + ":" + String(f % 24).padStart(2, "0"); }, 42);
+    opTimers.push(setTimeout(function () { clearInterval(iv); op.className = "op run out"; }, 4700));
+    opTimers.push(setTimeout(revealHero, 5000));
+    opTimers.push(setTimeout(function () { op.className = "op gone"; }, 5300));
+  }
+  op.addEventListener("click", function () { opTimers.forEach(clearTimeout); op.className = "op gone"; revealHero(); });
+  var seen = false;
+  try { seen = sessionStorage.getItem("samurai-op") === "1"; } catch (e) {}
+  if (seen || reduce) { op.className = "op gone"; revealHero(); }
+  else { try { sessionStorage.setItem("samurai-op", "1"); } catch (e) {} setTimeout(playOpening, 200); }
+  // the name in the nav plays the opening again
+  document.querySelector(".nav .name").addEventListener("click", function (e) {
+    e.preventDefault();
+    var h = document.documentElement, sb = h.style.scrollBehavior; h.style.scrollBehavior = "auto"; window.scrollTo(0, 0); h.style.scrollBehavior = sb;
+    if (!reduce) playOpening();
+  });
+
+  var counted = false;
+  function countUp() {
+    if (counted) return; counted = true;
+    var vals = { wide: wide.length, tall: tall.length, views: total };
+    document.querySelectorAll("[data-count]").forEach(function (el) {
+      var to = vals[el.dataset.count], t0 = Date.now(), D = reduce ? 1 : 1600;
+      var iv = setInterval(function () {
+        var k = Math.min((Date.now() - t0) / D, 1), v = to * (1 - Math.pow(1 - k, 4));
+        el.textContent = el.dataset.count === "views" ? fmt(Math.round(v)) : Math.round(v);
+        if (k >= 1) clearInterval(iv);
+      }, 30);
+    });
+  }
+
+  // ---------- marquee that leans with scroll speed ----------
+  var words = ["切り抜き", "ショート", "サムネイル", "企画動画", "テロップ", "効果音"];
+  var mq = $("mq");
+  mq.innerHTML = words.concat(words, words, words).map(function (w) { return "<span>" + w + "</span>"; }).join("");
+  var mx = 0, vel = 0, lastY = window.scrollY;
+  (function loop() {
+    var y = window.scrollY; vel += ((y - lastY) - vel) * .1; lastY = y;
+    if (!reduce) {
+      mx -= .6 + Math.min(Math.abs(vel) * .25, 14);
+      var half = mq.scrollWidth / 2; if (-mx > half) mx += half;
+      mq.style.transform = "translate3d(" + mx.toFixed(1) + "px,0,0) skewX(" + Math.max(-12, Math.min(12, -vel * .3)).toFixed(2) + "deg)";
+    }
+    requestAnimationFrame(loop);
+  })();
+
+  // ---------- reveal ----------
+  var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -8% 0px" }) : null;
+  function watch(el) { if (io) io.observe(el); else el.classList.add("is-in"); }
+  document.querySelectorAll(".sec .mask, .sec .fade, .contact .mask, .contact .fade").forEach(watch);
+
+  // ---------- highlight: top video + top short ----------
+  var topV = wide.slice().sort(function (a, b) { return b.views - a.views; })[0];
+  var topS = tall.slice().sort(function (a, b) { return b.views - a.views; })[0];
+  function hl(w, cls, label) {
+    return '<a class="' + cls + '" href="' + url(w) + '" target="_blank" rel="noopener"><img src="' + img(w) + '" alt="" decoding="async">' +
+      '<div class="ov"><span class="lb">' + label + '</span><p class="tt">' + esc(w.title) + '</p><span class="vv">' + fmt(w.views) + '回再生</span></div></a>';
+  }
+  $("hl").innerHTML = (topV ? hl(topV, "v", "MOST WATCHED — VIDEO") : "") + (topS ? hl(topS, "s", "MOST WATCHED — SHORT") : "");
+  watch($("hl"));
+
+  // ---------- works ----------
+  var state = { k: "v", client: false, sort: "views", q: "", shown: 0 };
+  var PAGE = { v: 18, s: 24, all: 30 };
+  var n = { v: wide.length, s: tall.length, all: all.length };
+  document.querySelectorAll(".tab").forEach(function (b) {
+    b.querySelector(".n").textContent = n[b.dataset.k];
+    b.addEventListener("click", function () {
+      state.k = b.dataset.k; reset();
+      document.querySelectorAll(".tab").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    });
+  });
+  $("onlyClient").addEventListener("change", function (e) { state.client = e.target.checked; reset(); });
+  $("sort").addEventListener("change", function (e) { state.sort = e.target.value; reset(); });
+  $("q").addEventListener("input", function (e) { state.q = e.target.value.trim().toLowerCase(); reset(); });
+  $("moreBtn").addEventListener("click", function () { state.shown += PAGE[state.k]; render(true); });
+  function reset() { state.shown = PAGE[state.k]; render(); }
+
+  function list() {
+    var src = state.k === "v" ? wide : state.k === "s" ? tall : all;
+    return src.filter(function (w) {
+      if (state.client && w.src !== "client") return false;
+      return !state.q || (w.title + " " + w.who).toLowerCase().indexOf(state.q) >= 0;
+    }).sort(state.sort === "views" ? function (a, b) { return b.views - a.views; } : function (a, b) { return age(a) - age(b); });
+  }
+  function card(w) {
+    var tag = w.src === "client" ? '<span class="tag">依頼 ' + esc(w.who) + '</span>' : "";
+    if (w.kind === "s") {
+      return '<a class="c s" href="' + url(w) + '" target="_blank" rel="noopener"><div class="ph"><img src="' + img(w) + '" alt="" loading="lazy" decoding="async">' + tag +
+        '<span class="go">YouTube ↗</span><div class="ov"><p class="t">' + esc(w.title) + '</p><span class="vv">' + fmt(w.views) + '回再生</span></div></div></a>';
+    }
+    return '<a class="c v" href="' + url(w) + '" target="_blank" rel="noopener"><div class="ph"><img src="' + img(w) + '" alt="" loading="lazy" decoding="async">' + tag +
+      '<span class="go">▶ YouTube</span></div><p class="meta"><b>' + fmt(w.views) + '回再生</b><span>' + esc(when(w)) + (w.dur ? '　' + esc(w.dur) : '') + '</span></p><p class="t">' + esc(w.title) + '</p></a>';
+  }
+  function render(append) {
+    var r = list(), grid = $("grid");
+    grid.className = state.k === "v" ? "g-wide" : state.k === "s" ? "g-tall" : "g-mix";
+    var start = append ? grid.children.length : 0;
+    var html = r.slice(start, state.shown).map(card).join("");
+    if (append) grid.insertAdjacentHTML("beforeend", html); else grid.innerHTML = html;
+    [].slice.call(grid.children, start).forEach(function (el, i) { el.style.transitionDelay = (i % 6) * 50 + "ms"; watch(el); });
+    $("count").textContent = r.length + " 本中 " + Math.min(state.shown, r.length) + " 本を表示";
+    $("moreBtn").hidden = state.shown >= r.length;
+  }
+  reset();
+
+  // ---------- clients ----------
+  var by = {};
+  client.forEach(function (w) { (by[w.who] = by[w.who] || { n: 0, v: 0 }); by[w.who].n++; by[w.who].v += w.views; });
+  $("clientList").innerHTML = Object.keys(by).sort(function (a, b) { return by[b].n - by[a].n; }).map(function (k) {
+    return "<li><b>" + esc(k) + " 様</b><span>" + by[k].n + " 本 ・ " + fmt(by[k].v) + " 回再生</span></li>";
+  }).join("");
+
+  $("copyMail").addEventListener("click", function () {
+    var b = this, done = function () { b.textContent = "コピーしました"; setTimeout(function () { b.textContent = "アドレスをコピー"; }, 1800); };
+    try { navigator.clipboard.writeText("uta40344@gmail.com").then(done, function () {}); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
