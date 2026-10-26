@@ -93,7 +93,7 @@ img { max-width: 100%; display: block; }
 .hero h1 .cl { position: relative; display: inline-block; overflow: hidden; padding-bottom: .02em; }
 .hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr)); gap: 24px; align-items: end; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--ink); }
 .hero-sub p { margin: 0; font-size: clamp(15px, 1.4vw, 18px); font-weight: 700; line-height: 1.6; }
-.stat b { display: block; font-family: var(--en); font-weight: 900; font-stretch: 112%; font-size: clamp(22px, 6.4vw, 56px); line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat b { display: block; font-family: var(--en); font-weight: 900; font-stretch: 112%; font-size: clamp(22px, 5.4vw, 56px); line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stat span { font-size: 12px; color: var(--muted); letter-spacing: .08em; }
 
 /* ---------- marquee ---------- */
@@ -281,7 +281,8 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
       </div>
       <label class="tog"><input type="checkbox" id="onlyClient"> 依頼作品だけ</label>
       <span class="sp"></span>
-      <select id="sort" aria-label="並べ替え"><option value="views">再生回数が多い順</option><option value="new">新しい順</option></select>
+      <select id="cast" aria-label="ライバーで絞り込む"><option value="">すべてのライバー</option></select>
+      <select id="sort" aria-label="並べ替え"><option value="views">再生回数が多い順</option><option value="viewsAsc">再生回数が少ない順</option><option value="new">新しい順</option><option value="old">古い順</option><option value="long">長い順</option><option value="short">短い順</option></select>
       <input id="q" type="search" placeholder="タイトル・ライバー名" aria-label="作品を検索">
     </div>
     <p class="count" id="count"></p>
@@ -382,8 +383,9 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
 </main>
 <footer class="foot"><div class="wrap"><span>© 2026 さ村井</span><a href="../" style="text-decoration:none">Charascène ↗</a></div></footer>
 
-<script src="works-data.js?v=202610270345"></script>
-<script src="estimate.js?v=202610270345"></script>
+<script src="works-data.js?v=202610270531"></script>
+<script src="livers.js?v=202610270531"></script>
+<script src="estimate.js?v=202610270531"></script>
 <script>
 (function () {
   var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -491,7 +493,43 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
   watch($("hl"));
 
   // ---------- works ----------
-  var state = { k: "v", client: false, sort: "views", q: "", shown: 0 };
+  // Who appears in each work: hashtags from YouTube (livers.js), the client's name, and liver names found in the title
+  var TAGS = window.WORKS_TAGS || {}, SERIES = window.WORKS_SERIES || [], NAMES = window.LIVER_NAMES || [];
+  function bare(s) { return String(s || "").replace(/[・\s　]/g, ""); }
+  var castCount = {};
+  all.forEach(function (w) {
+    var set = {};
+    (TAGS[w.id] || []).forEach(function (t) { set[t] = 1; });
+    if (w.who) set[w.who] = 1;
+    var t = bare(w.title);
+    NAMES.forEach(function (nm) { if (t.indexOf(bare(nm)) >= 0) set[nm] = 1; });
+    w.cast = Object.keys(set);
+    w.cast.forEach(function (c) { castCount[c] = (castCount[c] || 0) + 1; });
+  });
+  (function fillCast() {
+    var byCount = function (a, b) { return castCount[b] - castCount[a] || a.localeCompare(b, "ja"); };
+    var names = Object.keys(castCount);
+    var livers = names.filter(function (c) { return SERIES.indexOf(c) < 0; }).sort(byCount);
+    var series = names.filter(function (c) { return SERIES.indexOf(c) >= 0; }).sort(byCount);
+    var opt = function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "（" + castCount[c] + "）</option>"; };
+    $("cast").insertAdjacentHTML("beforeend",
+      '<optgroup label="ライバー">' + livers.map(opt).join("") + "</optgroup>" +
+      (series.length ? '<optgroup label="企画・ユニット">' + series.map(opt).join("") + "</optgroup>" : ""));
+  })();
+  // "1:46:08" / "8:43" -> seconds. Shorts carry no length; treat them as about 30 seconds.
+  function secs(w) {
+    if (!w.dur) return w.kind === "s" ? 30 : 0;
+    return w.dur.split(":").reduce(function (s, p) { return s * 60 + (+p || 0); }, 0);
+  }
+  var SORTS = {
+    views: function (a, b) { return b.views - a.views; },
+    viewsAsc: function (a, b) { return a.views - b.views; },
+    "new": function (a, b) { return age(a) - age(b); },
+    old: function (a, b) { return age(b) - age(a); },
+    long: function (a, b) { return secs(b) - secs(a); },
+    short: function (a, b) { return secs(a) - secs(b); }
+  };
+  var state = { k: "v", client: false, sort: "views", q: "", cast: "", shown: 0 };
   var PAGE = { v: 18, s: 24, all: 30 };
   var n = { v: wide.length, s: tall.length, all: all.length };
   document.querySelectorAll(".tab").forEach(function (b) {
@@ -503,6 +541,15 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
   });
   $("onlyClient").addEventListener("change", function (e) { state.client = e.target.checked; reset(); });
   $("sort").addEventListener("change", function (e) { state.sort = e.target.value; reset(); });
+  $("cast").addEventListener("change", function (e) {
+    state.cast = e.target.value;
+    // a liver's works are spread over videos and shorts, so show both together
+    if (state.cast && state.k !== "all") {
+      state.k = "all";
+      document.querySelectorAll(".tab").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.k === "all")); });
+    }
+    reset();
+  });
   $("q").addEventListener("input", function (e) { state.q = e.target.value.trim().toLowerCase(); reset(); });
   $("moreBtn").addEventListener("click", function () { state.shown += PAGE[state.k]; render(true); });
   function reset() { state.shown = PAGE[state.k]; render(); }
@@ -511,8 +558,9 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
     var src = state.k === "v" ? wide : state.k === "s" ? tall : all;
     return src.filter(function (w) {
       if (state.client && w.src !== "client") return false;
-      return !state.q || (w.title + " " + w.who).toLowerCase().indexOf(state.q) >= 0;
-    }).sort(state.sort === "views" ? function (a, b) { return b.views - a.views; } : function (a, b) { return age(a) - age(b); });
+      if (state.cast && w.cast.indexOf(state.cast) < 0) return false;
+      return !state.q || (w.title + " " + w.who + " " + w.cast.join(" ")).toLowerCase().indexOf(state.q) >= 0;
+    }).sort(SORTS[state.sort] || SORTS.views);
   }
   function card(w) {
     var tag = w.src === "client" ? '<span class="tag">依頼 ' + esc(w.who) + '</span>' : "";
@@ -530,7 +578,7 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
     var html = r.slice(start, state.shown).map(card).join("");
     if (append) grid.insertAdjacentHTML("beforeend", html); else grid.innerHTML = html;
     [].slice.call(grid.children, start).forEach(function (el, i) { el.style.transitionDelay = (i % 6) * 50 + "ms"; watch(el); });
-    $("count").textContent = r.length + " 本中 " + Math.min(state.shown, r.length) + " 本を表示";
+    $("count").textContent = (state.cast ? state.cast + "：" : "") + r.length + " 本中 " + Math.min(state.shown, r.length) + " 本を表示";
     $("moreBtn").hidden = state.shown >= r.length;
   }
   reset();
