@@ -282,6 +282,7 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
       <label class="tog"><input type="checkbox" id="onlyClient"> 依頼作品だけ</label>
       <span class="sp"></span>
       <select id="cast" aria-label="ライバーで絞り込む"><option value="">すべてのライバー</option></select>
+      <select id="period" aria-label="時期で絞り込む"><option value="">すべての時期</option></select>
       <select id="sort" aria-label="並べ替え"><option value="views">再生回数が多い順</option><option value="viewsAsc">再生回数が少ない順</option><option value="new">新しい順</option><option value="old">古い順</option><option value="long">長い順</option><option value="short">短い順</option></select>
       <input id="q" type="search" placeholder="タイトル・ライバー名" aria-label="作品を検索">
     </div>
@@ -383,9 +384,9 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
 </main>
 <footer class="foot"><div class="wrap"><span>© 2026 さ村井</span><a href="../" style="text-decoration:none">Charascène ↗</a></div></footer>
 
-<script src="works-data.js?v=202610270531"></script>
-<script src="livers.js?v=202610270531"></script>
-<script src="estimate.js?v=202610270531"></script>
+<script src="works-data.js?v=202610270936"></script>
+<script src="livers.js?v=202610270936"></script>
+<script src="estimate.js?v=202610270936"></script>
 <script>
 (function () {
   var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -401,12 +402,14 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
   var total = all.reduce(function (s, w) { return s + w.views; }, 0);
   function url(w) { return w.kind === "s" ? "https://youtube.com/shorts/" + w.id : "https://youtu.be/" + w.id; }
   function img(w) { return "https://i.ytimg.com/vi/" + w.id + (w.kind === "s" ? "/oardefault.jpg" : "/hqdefault.jpg"); }
+  var ISO = /^\d{4}-\d\d-\d\d$/;
   function age(w) {
-    if (w.src === "client") return (Date.now() - Date.parse(w.when)) / 864e5;
+    if (ISO.test(w.when || "")) return (Date.now() - Date.parse(w.when)) / 864e5;
     var m = /(\d+)\s*(時間|日|週間|か月|年)前/.exec(w.when || ""); if (!m) return 9999;
     return +m[1] * { "時間": 1 / 24, "日": 1, "週間": 7, "か月": 30, "年": 365 }[m[2]];
   }
-  function when(w) { return w.src === "client" ? w.when.replace(/-/g, "/") : w.when; }
+  function when(w) { return ISO.test(w.when || "") ? w.when.replace(/-/g, "/") : w.when; }
+  function ym(w) { return ISO.test(w.when || "") ? w.when.slice(0, 7) : ""; }
 
   // ---------- opening: an edit timeline plays the name, then collapses and lifts ----------
   var op = $("op"), opTimers = [];
@@ -516,6 +519,19 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
       '<optgroup label="ライバー">' + livers.map(opt).join("") + "</optgroup>" +
       (series.length ? '<optgroup label="企画・ユニット">' + series.map(opt).join("") + "</optgroup>" : ""));
   })();
+  // 時期: one option per year and per month, newest first, so you can step back through the archive
+  (function fillPeriod() {
+    var months = {}, years = {};
+    all.forEach(function (w) { var m = ym(w); if (!m) return; months[m] = (months[m] || 0) + 1; years[m.slice(0, 4)] = (years[m.slice(0, 4)] || 0) + 1; });
+    var html = Object.keys(years).sort().reverse().map(function (y) {
+      var ms = Object.keys(months).filter(function (m) { return m.slice(0, 4) === y; }).sort().reverse();
+      return '<optgroup label="' + y + '年">' +
+        '<option value="' + y + '">' + y + "年すべて（" + years[y] + "）</option>" +
+        ms.map(function (m) { return '<option value="' + m + '">' + y + "年" + (+m.slice(5)) + "月（" + months[m] + "）</option>"; }).join("") +
+        "</optgroup>";
+    }).join("");
+    $("period").insertAdjacentHTML("beforeend", html);
+  })();
   // "1:46:08" / "8:43" -> seconds. Shorts carry no length; treat them as about 30 seconds.
   function secs(w) {
     if (!w.dur) return w.kind === "s" ? 30 : 0;
@@ -529,7 +545,7 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
     long: function (a, b) { return secs(b) - secs(a); },
     short: function (a, b) { return secs(a) - secs(b); }
   };
-  var state = { k: "v", client: false, sort: "views", q: "", cast: "", shown: 0 };
+  var state = { k: "v", client: false, sort: "views", q: "", cast: "", period: "", shown: 0 };
   var PAGE = { v: 18, s: 24, all: 30 };
   var n = { v: wide.length, s: tall.length, all: all.length };
   document.querySelectorAll(".tab").forEach(function (b) {
@@ -541,6 +557,16 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
   });
   $("onlyClient").addEventListener("change", function (e) { state.client = e.target.checked; reset(); });
   $("sort").addEventListener("change", function (e) { state.sort = e.target.value; reset(); });
+  $("period").addEventListener("change", function (e) {
+    state.period = e.target.value;
+    // looking back through a period reads best oldest-first across videos and shorts
+    if (state.period) {
+      if (state.sort === "views" || state.sort === "new") { state.sort = "old"; $("sort").value = "old"; }
+      state.k = "all";
+      document.querySelectorAll(".tab").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.k === "all")); });
+    }
+    reset();
+  });
   $("cast").addEventListener("change", function (e) {
     state.cast = e.target.value;
     // a liver's works are spread over videos and shorts, so show both together
@@ -559,6 +585,7 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
     return src.filter(function (w) {
       if (state.client && w.src !== "client") return false;
       if (state.cast && w.cast.indexOf(state.cast) < 0) return false;
+      if (state.period && ym(w).indexOf(state.period) !== 0) return false;
       return !state.q || (w.title + " " + w.who + " " + w.cast.join(" ")).toLowerCase().indexOf(state.q) >= 0;
     }).sort(SORTS[state.sort] || SORTS.views);
   }
@@ -578,7 +605,8 @@ fieldset.field { border: 0; padding: 0; min-width: 0; }
     var html = r.slice(start, state.shown).map(card).join("");
     if (append) grid.insertAdjacentHTML("beforeend", html); else grid.innerHTML = html;
     [].slice.call(grid.children, start).forEach(function (el, i) { el.style.transitionDelay = (i % 6) * 50 + "ms"; watch(el); });
-    $("count").textContent = (state.cast ? state.cast + "：" : "") + r.length + " 本中 " + Math.min(state.shown, r.length) + " 本を表示";
+    var label = [state.period ? state.period.replace("-", "年") + (state.period.length > 4 ? "月" : "年") : "", state.cast].filter(Boolean).join("・");
+    $("count").textContent = (label ? label + "：" : "") + r.length + " 本中 " + Math.min(state.shown, r.length) + " 本を表示";
     $("moreBtn").hidden = state.shown >= r.length;
   }
   reset();
