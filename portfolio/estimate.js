@@ -12,7 +12,8 @@
     short: { label: 'ショート動画', price: 3000, first: 2000, long: 2000 },
     long1: { label: '横動画（0:01〜7:59）', price: 8000, first: 6000, long: 6000 },
     long2: { label: '横動画（8:00〜14:59）', price: 15000, first: 10000, long: 12000 },
-    long3: { label: '横動画（15:00以上）', price: null },
+    long3: { label: '横動画（15:00〜19:59）', price: 18000, first: 13000, long: 15000 },
+    long4: { label: '横動画（20:00以上）', price: null },
     plan:  { label: '企画動画', price: null }
   };
   var THUMB = { price: 1000, first: 0, long: 500 };
